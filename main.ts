@@ -1,12 +1,13 @@
 import express from "express";
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { usersTable } from "./lib/drizzle/schema.ts";
+import { usersTable, expensesTable } from "./lib/drizzle/schema.ts";
 import * as schema from "./lib/drizzle/schema.ts"; // dôležité pre typovanie DB
 import cors from "cors";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import authMiddleware from "./middleware/auth.ts";
+import { eq, and } from "drizzle-orm";
 
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
@@ -81,6 +82,65 @@ app.post("/auth/login", async (req, res) => {
     });
   } catch (error) {
     console.error("Error logging in:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// Pridavanie expenses
+app.post("/expenses", authMiddleware, async (req, res) => {
+  try {
+    const { amount, description, expenseType } = req.body;
+    const userId = req.user!.id; // Získaj userId z JWT
+
+    const [newExpense] = await db
+      .insert(expensesTable)
+      .values({
+        userId,
+        amount,
+        description,
+        expenseType,
+      })
+      .returning();
+
+    res.json(newExpense);
+  } catch (error) {
+    console.error("Error adding expense:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// Získavanie expenses
+app.get("/expenses", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user!.id; // Získaj userId z JWT
+    const dbResponse = await db.query.expensesTable.findMany({
+      where: (e, { eq }) => eq(e.userId, userId),
+    });
+
+    res.json(dbResponse);
+  } catch (error) {
+    console.error("Error fetching expenses:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+//delete expense
+app.delete("/expenses/:id", authMiddleware, async (req, res) => {
+  try {
+    const expenseId = req.params.id; // string | undefined
+    if (!expenseId) {
+      return res.status(400).send("Expense ID is required");
+    }
+
+    const userId = req.user!.id; // z JWT, string
+
+    const deleted = await db.delete(expensesTable).where(
+      and(
+        eq(expensesTable.id, expenseId), // už bude string, nie undefined
+        eq(expensesTable.userId, userId)
+      )
+    );
+
+    res.sendStatus(204);
+  } catch (error) {
+    console.error("Error deleting expense:", error);
     res.status(500).send("Internal Server Error");
   }
 });

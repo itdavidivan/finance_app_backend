@@ -1,11 +1,16 @@
+import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-export default function authMiddleware(req, res, next) {
+export default function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const decoded = jwt.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
+      req.headers.authorization?.split(" ")[1] || "",
+      process.env.JWT_SECRET as string
     );
-    req.user = decoded;
+    req.user = decoded as { id: string; username: string };
     next();
   } catch (e) {
     console.log(e);
