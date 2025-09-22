@@ -88,7 +88,7 @@ app.post("/auth/login", async (req, res) => {
 // Pridavanie expenses
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
-    const { amount, description, expenseType } = req.body;
+    const { amount, description, expenseType, createdAt } = req.body;
     const userId = req.user!.id; // Získaj userId z JWT
 
     const [newExpense] = await db
@@ -98,6 +98,7 @@ app.post("/expenses", authMiddleware, async (req, res) => {
         amount,
         description,
         expenseType,
+        createdAt,
       })
       .returning();
 
