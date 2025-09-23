@@ -86,21 +86,23 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 // Pridavanie expenses
+// Pridávanie expenses + email ak je amount > 50
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;
-    const userId = req.user!.id; // Získaj userId z JWT
+    const userId = req.user!.id; // z JWT
 
+    // Uloženie do DB
     const [newExpense] = await db
       .insert(expensesTable)
-      .values({
-        userId,
-        amount,
-        description,
-        expenseType,
-        createdAt,
-      })
+      .values({ userId, amount, description, expenseType, createdAt })
       .returning();
+
+    // Poslanie emailu ak je suma väčšia ako 50
+    if (amount > 50) {
+      const fixedEmail = "david95ivan@gmail.com";
+      await sendExpenseEmail(amount, description, fixedEmail); // odosielaj email na fixny email
+    }
 
     res.json(newExpense);
   } catch (error) {
@@ -108,6 +110,7 @@ app.post("/expenses", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
 // Získavanie expenses
 app.get("/expenses", authMiddleware, async (req, res) => {
   try {
@@ -147,14 +150,14 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
 });
 import { sendExpenseEmail } from "./server/notifyEmail.ts";
 
-app.post("/expenses", async (req, res) => {
-  const { amount, description } = req.body;
-  // ... ulož do DB
-  if (amount > 50) {
-    await sendExpenseEmail(amount, description);
-  }
-  res.json({ success: true });
-});
+// app.post("/expenses", async (req, res) => {
+//   const { amount, description } = req.body;
+//   // ... ulož do DB
+//   if (amount > 50) {
+//     await sendExpenseEmail(amount, description);
+//   }
+//   res.json({ success: true });
+// });
 
 const PORT = process.env.PORT || 8080; // fallback 8080 len lokálne
 app.listen(PORT, () => {

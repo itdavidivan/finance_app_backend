@@ -1,6 +1,10 @@
 import nodemailer from "nodemailer";
 
-export async function sendExpenseEmail(amount: number, description: string) {
+export async function sendExpenseEmail(
+  amount: number,
+  description: string,
+  toEmail: string
+) {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -11,7 +15,7 @@ export async function sendExpenseEmail(amount: number, description: string) {
 
   await transporter.sendMail({
     from: `"Finance App" <${process.env.EMAIL_USER}>`,
-    to: "david95ivan@gmail.com",
+    to: toEmail,
     subject: "Nový veľký výdavok",
     text: `Bol pridaný výdavok ${amount} € – ${description}`,
   });
