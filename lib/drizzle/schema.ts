@@ -12,6 +12,7 @@ export const usersTable = pgTable("users", {
   id: uuid("id").defaultRandom(),
   username: varchar("username").notNull().unique(),
   password: varchar("password").notNull(),
+  email: varchar("email").notNull().unique(),
 });
 
 export const expenseTypeEnum = pgEnum("expense_type", ["car", "meal", "house"]);

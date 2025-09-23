@@ -23,11 +23,11 @@ app.get("/", (req, res) => {
 // 📝 Register
 app.post("/auth/register", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     // 1️⃣ Skontroluj, či už existuje používateľ
     const existingUser = await db.query.usersTable.findFirst({
-      where: (u, { eq }) => eq(u.username, username),
+      where: (u, { eq }) => eq(u.username, username) || eq(u.email, email),
     });
 
     if (existingUser) {
@@ -41,6 +41,7 @@ app.post("/auth/register", async (req, res) => {
     await db.insert(usersTable).values({
       username,
       password: hashedPassword,
+      email,
     });
 
     res.json({ message: "User registered successfully" });
