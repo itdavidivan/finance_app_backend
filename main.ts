@@ -25,11 +25,9 @@ app.post("/auth/register", async (req, res) => {
   try {
     const { username, password, email } = req.body;
 
-    // 1️⃣ Skontroluj, či už existuje používateľ
     const existingUser = await db.query.usersTable.findFirst({
       where: (u, { eq }) => eq(u.username, username) || eq(u.email, email),
     });
-
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
