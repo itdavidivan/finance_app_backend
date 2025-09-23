@@ -8,6 +8,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import authMiddleware from "./middleware/auth.ts";
 import { eq, and } from "drizzle-orm";
+import { sendExpenseEmail } from "./server/notifyEmail.ts";
 
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
@@ -89,13 +90,13 @@ app.post("/auth/login", async (req, res) => {
 // Pridávanie expenses + email ak je amount > 50
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
-    const { amount, description, expenseType, createdAt } = req.body;
+    const { amount, description, expenseType } = req.body;
     const userId = req.user!.id; // z JWT
 
     // Uloženie do DB
     const [newExpense] = await db
       .insert(expensesTable)
-      .values({ userId, amount, description, expenseType, createdAt })
+      .values({ userId, amount, description, expenseType })
       .returning();
 
     // Poslanie emailu ak je suma väčšia ako 50
@@ -148,7 +149,6 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-import { sendExpenseEmail } from "./server/notifyEmail.ts";
 
 // app.post("/expenses", async (req, res) => {
 //   const { amount, description } = req.body;
