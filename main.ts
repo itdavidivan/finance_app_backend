@@ -145,6 +145,16 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+import { sendExpenseEmail } from "./server/notifyEmail.ts";
+
+app.post("/expenses", async (req, res) => {
+  const { amount, description } = req.body;
+  // ... ulož do DB
+  if (amount > 50) {
+    await sendExpenseEmail(amount, description);
+  }
+  res.json({ success: true });
+});
 
 const PORT = process.env.PORT || 8080; // fallback 8080 len lokálne
 app.listen(PORT, () => {
