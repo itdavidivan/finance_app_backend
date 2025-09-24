@@ -17,7 +17,7 @@ export async function sendExpenseAlert(
 ) {
   try {
     await transporter.sendMail({
-      from: `"Finance App" <alert@sendinblue.com>`, // môžeš zmeniť, ale musíš overiť v Sendinblue
+      from: `"Finance App" <it.davidivan@gmail.com>`, // môžeš zmeniť, ale musíš overiť v Sendinblue
       to,
       subject: `High expense alert: ${amount} €`,
       text: `Pridaný výdavok ${amount} €\nPopis: ${description}`,
