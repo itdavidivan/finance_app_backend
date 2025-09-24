@@ -9,10 +9,12 @@ import jwt from "jsonwebtoken";
 import authMiddleware from "./middleware/auth.ts";
 import { eq, and } from "drizzle-orm";
 import { sendExpenseAlert } from "./lib/drizzle/sendEmail.ts";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
@@ -145,7 +147,6 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;
@@ -156,11 +157,12 @@ app.post("/expenses", authMiddleware, async (req, res) => {
       .values({ userId, amount, description, expenseType, createdAt })
       .returning();
 
-    // Posielame e-mail pri každom výdavku
-    const targetEmail = process.env.ALERT_EMAIL;
-    if (targetEmail) {
-      await sendExpenseAlert(targetEmail, Number(amount), description);
-    }
+    // E-mail pri každom pridanom výdavku
+    await sendExpenseAlert(
+      process.env.ALERT_EMAIL!,
+      Number(amount),
+      description
+    );
 
     res.json(newExpense);
   } catch (error) {
@@ -168,7 +170,6 @@ app.post("/expenses", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-
 const PORT = process.env.PORT || 8080; // fallback 8080 len lokálne
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
