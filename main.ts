@@ -145,6 +145,7 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;

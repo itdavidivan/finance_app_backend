@@ -1,31 +1,29 @@
-import nodemailer from "nodemailer";
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.sendinblue.com",
-  port: 587,
-  secure: false, // STARTTLS
-  auth: {
-    user: "apikey", // Sendinblue vyžaduje user = "apikey"
-    pass: process.env.SENDINBLUE_API_KEY!,
-  },
-});
+// Inicializácia Sendinblue klienta
+const client = SibApiV3Sdk.ApiClient.instance;
+client.authentications["api-key"].apiKey = process.env.SENDINBLUE_API_KEY;
+
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
 export async function sendExpenseAlert(
   to: string,
   amount: number,
   description: string
 ) {
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
+    sender: { name: "Finance App", email: process.env.FROM_EMAIL },
+    to: [{ email: to }],
+    subject: `High expense alert: ${amount} €`,
+    htmlContent: `<h2>Nový vysoký výdavok</h2>
+                  <p><b>Suma:</b> ${amount} €</p>
+                  <p><b>Popis:</b> ${description}</p>`,
+    textContent: `Pridaný výdavok ${amount} €\nPopis: ${description}`,
+  });
+
   try {
-    await transporter.sendMail({
-      from: `"Finance App" <it.davidivan@gmail.com>`, // môžeš zmeniť, ale musíš overiť v Sendinblue
-      to,
-      subject: `High expense alert: ${amount} €`,
-      text: `Pridaný výdavok ${amount} €\nPopis: ${description}`,
-      html: `<h2>Nový vysoký výdavok</h2>
-             <p><b>Suma:</b> ${amount} €</p>
-             <p><b>Popis:</b> ${description}</p>`,
-    });
-    console.log("✅ E-mail odoslaný na:", to);
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log("✅ E-mail odoslaný na:", to, "ID:", data.messageId);
   } catch (err) {
     console.error("❌ Chyba pri posielaní e-mailu:", err);
   }
