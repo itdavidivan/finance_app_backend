@@ -1,8 +1,7 @@
-const SibApiV3Sdk = require("sib-api-v3-sdk");
+import SibApiV3Sdk from "sib-api-v3-sdk";
 
-// Inicializácia Sendinblue klienta
 const client = SibApiV3Sdk.ApiClient.instance;
-client.authentications["api-key"].apiKey = process.env.SENDINBLUE_API_KEY;
+client.authentications["api-key"].apiKey = process.env.SENDINBLUE_API_KEY!;
 
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
