@@ -8,7 +8,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import authMiddleware from "./middleware/auth.ts";
 import { eq, and } from "drizzle-orm";
-import { sendExpenseAlert } from "./lib/drizzle/sendEmail.ts";
+
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -88,28 +88,28 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 // Pridavanie expenses
-// app.post("/expenses", authMiddleware, async (req, res) => {
-//   try {
-//     const { amount, description, expenseType, createdAt } = req.body;
-//     const userId = req.user!.id; // Získaj userId z JWT
+app.post("/expenses", authMiddleware, async (req, res) => {
+  try {
+    const { amount, description, expenseType, createdAt } = req.body;
+    const userId = req.user!.id; // Získaj userId z JWT
 
-//     const [newExpense] = await db
-//       .insert(expensesTable)
-//       .values({
-//         userId,
-//         amount,
-//         description,
-//         expenseType,
-//         createdAt,
-//       })
-//       .returning();
+    const [newExpense] = await db
+      .insert(expensesTable)
+      .values({
+        userId,
+        amount,
+        description,
+        expenseType,
+        createdAt,
+      })
+      .returning();
 
-//     res.json(newExpense);
-//   } catch (error) {
-//     console.error("Error adding expense:", error);
-//     res.status(500).send("Internal Server Error");
-//   }
-// });
+    res.json(newExpense);
+  } catch (error) {
+    console.error("Error adding expense:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 // Získavanie expenses
 app.get("/expenses", authMiddleware, async (req, res) => {
   try {
@@ -147,29 +147,7 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-app.post("/expenses", authMiddleware, async (req, res) => {
-  try {
-    const { amount, description, expenseType, createdAt } = req.body;
-    const userId = req.user!.id;
 
-    const [newExpense] = await db
-      .insert(expensesTable)
-      .values({ userId, amount, description, expenseType, createdAt })
-      .returning();
-
-    // E-mail pri každom pridanom výdavku
-    await sendExpenseAlert(
-      process.env.ALERT_EMAIL!,
-      Number(amount),
-      description
-    );
-
-    res.json(newExpense);
-  } catch (error) {
-    console.error("Error adding expense:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
 const PORT = process.env.PORT || 8080; // fallback 8080 len lokálne
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
