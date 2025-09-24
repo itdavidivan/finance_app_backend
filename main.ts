@@ -8,7 +8,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import authMiddleware from "./middleware/auth.ts";
 import { eq, and } from "drizzle-orm";
-import { sendExpenseAlert } from "./lib/sendEmail.ts";
+import { sendExpenseAlert } from "./lib/drizzle/sendEmail.ts";
 
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
@@ -156,21 +156,18 @@ app.post("/expenses", authMiddleware, async (req, res) => {
       .values({ userId, amount, description, expenseType, createdAt })
       .returning();
 
-    // >>>> NOVÁ ČASŤ <<<<
+    // >>> EMAIL ALERT AK JE SUMA > 100
     if (Number(amount) > 100) {
-      // môžeš poslať na fixný e-mail alebo na e-mail daného usera
+      console.log("Trigger email alert for amount:", amount);
       const user = await db.query.usersTable.findFirst({
         where: (u, { eq }) => eq(u.id, userId),
       });
-
       const targetEmail = process.env.ALERT_EMAIL || user?.email;
       if (targetEmail) {
-        sendExpenseAlert(targetEmail, Number(amount), description).catch(
-          (err) => console.error("Email error:", err)
-        );
+        sendExpenseAlert(targetEmail, Number(amount), description);
       }
     }
-    // >>>> KONIEC NOVÉHO <<<<
+    // <<< KONIEC EMAIL ALERTU
 
     res.json(newExpense);
   } catch (error) {
