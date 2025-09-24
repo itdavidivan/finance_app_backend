@@ -8,6 +8,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import authMiddleware from "./middleware/auth.ts";
 import { eq, and } from "drizzle-orm";
+import { sendExpenseAlert } from "./lib/sendEmail.ts";
 
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
@@ -85,28 +86,28 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 // Pridavanie expenses
-app.post("/expenses", authMiddleware, async (req, res) => {
-  try {
-    const { amount, description, expenseType, createdAt } = req.body;
-    const userId = req.user!.id; // Získaj userId z JWT
+// app.post("/expenses", authMiddleware, async (req, res) => {
+//   try {
+//     const { amount, description, expenseType, createdAt } = req.body;
+//     const userId = req.user!.id; // Získaj userId z JWT
 
-    const [newExpense] = await db
-      .insert(expensesTable)
-      .values({
-        userId,
-        amount,
-        description,
-        expenseType,
-        createdAt,
-      })
-      .returning();
+//     const [newExpense] = await db
+//       .insert(expensesTable)
+//       .values({
+//         userId,
+//         amount,
+//         description,
+//         expenseType,
+//         createdAt,
+//       })
+//       .returning();
 
-    res.json(newExpense);
-  } catch (error) {
-    console.error("Error adding expense:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
+//     res.json(newExpense);
+//   } catch (error) {
+//     console.error("Error adding expense:", error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// });
 // Získavanie expenses
 app.get("/expenses", authMiddleware, async (req, res) => {
   try {
@@ -141,6 +142,39 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
     res.sendStatus(204);
   } catch (error) {
     console.error("Error deleting expense:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/expenses", authMiddleware, async (req, res) => {
+  try {
+    const { amount, description, expenseType, createdAt } = req.body;
+    const userId = req.user!.id;
+
+    const [newExpense] = await db
+      .insert(expensesTable)
+      .values({ userId, amount, description, expenseType, createdAt })
+      .returning();
+
+    // >>>> NOVÁ ČASŤ <<<<
+    if (Number(amount) > 100) {
+      // môžeš poslať na fixný e-mail alebo na e-mail daného usera
+      const user = await db.query.usersTable.findFirst({
+        where: (u, { eq }) => eq(u.id, userId),
+      });
+
+      const targetEmail = process.env.ALERT_EMAIL || user?.email;
+      if (targetEmail) {
+        sendExpenseAlert(targetEmail, Number(amount), description).catch(
+          (err) => console.error("Email error:", err)
+        );
+      }
+    }
+    // >>>> KONIEC NOVÉHO <<<<
+
+    res.json(newExpense);
+  } catch (error) {
+    console.error("Error adding expense:", error);
     res.status(500).send("Internal Server Error");
   }
 });
