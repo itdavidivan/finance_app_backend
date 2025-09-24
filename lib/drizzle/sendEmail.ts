@@ -10,8 +10,13 @@ export async function sendExpenseAlert(
   amount: number,
   description: string
 ) {
+  if (!process.env.FROM_EMAIL) throw new Error("FROM_EMAIL is missing in .env");
+
   const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
-    sender: { name: "Finance App", email: process.env.FROM_EMAIL },
+    sender: {
+      name: "Finance App",
+      email: process.env.FROM_EMAIL, // toto musí byť presne overený email v Sendinblue
+    },
     to: [{ email: to }],
     subject: `Nový výdavok: ${amount} €`,
     htmlContent: `<h2>Nový výdavok</h2>
@@ -22,7 +27,7 @@ export async function sendExpenseAlert(
 
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log("✅ E-mail odoslaný:", data.messageId);
+    console.log("✅ E-mail odoslaný na:", to, "ID:", data.messageId);
   } catch (err) {
     console.error("❌ Chyba pri posielaní e-mailu:", err);
   }
