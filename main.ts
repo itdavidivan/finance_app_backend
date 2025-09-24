@@ -156,10 +156,9 @@ app.post("/expenses", authMiddleware, async (req, res) => {
       .values({ userId, amount, description, expenseType, createdAt })
       .returning();
 
-    // EMAIL ALERT pri každom výdavku
+    // Posielame e-mail pri každom výdavku
     const targetEmail = process.env.ALERT_EMAIL;
     if (targetEmail) {
-      console.log("Trigger email alert for amount:", amount);
       await sendExpenseAlert(targetEmail, Number(amount), description);
     }
 
