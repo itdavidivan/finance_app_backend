@@ -13,8 +13,8 @@ export async function sendExpenseAlert(
   const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
     sender: { name: "Finance App", email: process.env.FROM_EMAIL },
     to: [{ email: to }],
-    subject: `High expense alert: ${amount} €`,
-    htmlContent: `<h2>Nový vysoký výdavok</h2>
+    subject: `Nový výdavok: ${amount} €`,
+    htmlContent: `<h2>Pridaný výdavok</h2>
                   <p><b>Suma:</b> ${amount} €</p>
                   <p><b>Popis:</b> ${description}</p>`,
     textContent: `Pridaný výdavok ${amount} €\nPopis: ${description}`,

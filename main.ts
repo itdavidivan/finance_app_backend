@@ -156,13 +156,11 @@ app.post("/expenses", authMiddleware, async (req, res) => {
       .values({ userId, amount, description, expenseType, createdAt })
       .returning();
 
-    // EMAIL ALERT > 100 €
-    if (Number(amount) > 100) {
+    // EMAIL ALERT pri každom výdavku
+    const targetEmail = process.env.ALERT_EMAIL;
+    if (targetEmail) {
       console.log("Trigger email alert for amount:", amount);
-      const targetEmail = process.env.ALERT_EMAIL;
-      if (targetEmail) {
-        await sendExpenseAlert(targetEmail, Number(amount), description);
-      }
+      await sendExpenseAlert(targetEmail, Number(amount), description);
     }
 
     res.json(newExpense);
