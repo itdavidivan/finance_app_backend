@@ -145,7 +145,6 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;
@@ -156,18 +155,14 @@ app.post("/expenses", authMiddleware, async (req, res) => {
       .values({ userId, amount, description, expenseType, createdAt })
       .returning();
 
-    // >>> EMAIL ALERT AK JE SUMA > 100
+    // EMAIL ALERT > 100 €
     if (Number(amount) > 100) {
       console.log("Trigger email alert for amount:", amount);
-      const user = await db.query.usersTable.findFirst({
-        where: (u, { eq }) => eq(u.id, userId),
-      });
-      const targetEmail = process.env.ALERT_EMAIL || user?.email;
+      const targetEmail = process.env.ALERT_EMAIL;
       if (targetEmail) {
-        sendExpenseAlert(targetEmail, Number(amount), description);
+        await sendExpenseAlert(targetEmail, Number(amount), description);
       }
     }
-    // <<< KONIEC EMAIL ALERTU
 
     res.json(newExpense);
   } catch (error) {

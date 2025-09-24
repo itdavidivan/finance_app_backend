@@ -1,23 +1,23 @@
 import nodemailer from "nodemailer";
 
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.sendinblue.com",
+  port: 587,
+  secure: false, // STARTTLS
+  auth: {
+    user: "apikey", // Sendinblue vyžaduje user = "apikey"
+    pass: process.env.SENDINBLUE_API_KEY!,
+  },
+});
+
 export async function sendExpenseAlert(
   to: string,
   amount: number,
   description: string
 ) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: false, // 587 = STARTTLS
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
   try {
     await transporter.sendMail({
-      from: `"Finance App" <${process.env.SMTP_USER}>`,
+      from: `"Finance App" <alert@sendinblue.com>`, // môžeš zmeniť, ale musíš overiť v Sendinblue
       to,
       subject: `High expense alert: ${amount} €`,
       text: `Pridaný výdavok ${amount} €\nPopis: ${description}`,
