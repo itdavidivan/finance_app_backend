@@ -10,7 +10,7 @@ export default function authMiddleware(
       req.headers.authorization?.split(" ")[1] || "",
       process.env.JWT_SECRET as string
     );
-    req.user = decoded as { id: string; username: string };
+    req.user = decoded as { id: string; username: string; email: string };
     next();
   } catch (e) {
     console.log(e);

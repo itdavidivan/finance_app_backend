@@ -8,11 +8,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import authMiddleware from "./middleware/auth.ts";
 import { eq, and } from "drizzle-orm";
-
+import { Resend } from "resend";
 import dotenv from "dotenv";
 
 dotenv.config();
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
 app.use(cors());
@@ -110,6 +110,46 @@ app.post("/expenses", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+// Pridavanie expenses s notifikáciou
+app.post("/expenses", authMiddleware, async (req, res) => {
+  try {
+    const { amount, description, expenseType, createdAt } = req.body;
+    const userId = req.user!.id; // Získaj userId z JWT
+
+    // 1️⃣ Vloženie do DB
+    const [newExpense] = await db
+      .insert(expensesTable)
+      .values({
+        userId,
+        amount,
+        description,
+        expenseType,
+        createdAt,
+      })
+      .returning();
+
+    // 2️⃣ Poslanie email notifikácie cez Resend
+    try {
+      const result = await resend.emails.send({
+        from: "Finance App <onboarding@resend.dev>",
+        to: req.user!.email, // pošli email na email používateľa
+        subject: "New Expense Added",
+        text: `You added a new expense:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
+      });
+
+      console.log("Email sent! ID:", result.data?.id);
+    } catch (emailErr) {
+      console.error("Error sending notification email:", emailErr);
+    }
+
+    // 3️⃣ Vrátenie nového expense klientovi
+    res.json(newExpense);
+  } catch (error) {
+    console.error("Error adding expense:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 // Získavanie expenses
 app.get("/expenses", authMiddleware, async (req, res) => {
   try {
