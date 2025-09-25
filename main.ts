@@ -136,7 +136,7 @@ app.post("/expenses", authMiddleware, async (req, res) => {
         subject: "New Expense Added",
         text: `A new expense was added:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
       });
-      console.log("Email sent! ID:", result.data?.id);
+      console.log("Send fulldata", result);
     } catch (emailErr) {
       console.error("Error sending notification email:", emailErr);
     }

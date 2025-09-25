@@ -11,6 +11,8 @@ export default function authMiddleware(
       process.env.JWT_SECRET as string
     );
     req.user = decoded as { id: string; username: string; email: string };
+    console.log("decoded user", decoded);
+
     next();
   } catch (e) {
     console.log(e);
