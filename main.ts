@@ -114,7 +114,7 @@ app.post("/auth/login", async (req, res) => {
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;
-   const { id: userId, email } = req.user!; // 👈 získame email
+    const { id: userId, email } = req.user!; // 👈 získame email
 
     // 1️⃣ Vloženie do DB
     const [newExpense] = await db
@@ -132,7 +132,7 @@ app.post("/expenses", authMiddleware, async (req, res) => {
     try {
       const result = await resend.emails.send({
         from: "Finance App <onboarding@resend.dev>",
-        to: , // fixný email
+        to: email, // fixný email
         subject: "New Expense Added",
         text: `A new expense was added:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
       });
