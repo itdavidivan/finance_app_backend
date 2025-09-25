@@ -115,33 +115,27 @@ app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;
     const userId = req.user!.id;
+    const userEmail = req.user!.email;
 
-    // 1️⃣ Vloženie do DB
+    // Vloženie do DB
     const [newExpense] = await db
       .insert(expensesTable)
-      .values({
-        userId,
-        amount,
-        description,
-        expenseType,
-        createdAt,
-      })
+      .values({ userId, amount, description, expenseType, createdAt })
       .returning();
 
-    // 2️⃣ Poslanie emailu na fixný email
+    // Poslanie emailu na email používateľa
     try {
       const result = await resend.emails.send({
         from: "Finance App <onboarding@resend.dev>",
-        to: "it.davidivan@gmail.com", // fixný email
+        to: userEmail,
         subject: "New Expense Added",
-        text: `A new expense was added:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
+        text: `You added a new expense:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
       });
       console.log("Email sent! ID:", result.data?.id);
     } catch (emailErr) {
       console.error("Error sending notification email:", emailErr);
     }
 
-    // 3️⃣ Vrátenie nového expense klientovi
     res.json(newExpense);
   } catch (error) {
     console.error("Error adding expense:", error);
