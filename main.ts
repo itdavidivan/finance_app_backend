@@ -74,7 +74,7 @@ app.post("/auth/login", async (req, res) => {
 
     // 3️⃣ Vygeneruj JWT
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username, email: user.email },
       process.env.JWT_SECRET!
     );
 
