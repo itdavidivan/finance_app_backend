@@ -88,33 +88,33 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 // Pridavanie expenses
-app.post("/expenses", authMiddleware, async (req, res) => {
-  try {
-    const { amount, description, expenseType, createdAt } = req.body;
-    const userId = req.user!.id; // Získaj userId z JWT
+// app.post("/expenses", authMiddleware, async (req, res) => {
+//   try {
+//     const { amount, description, expenseType, createdAt } = req.body;
+//     const userId = req.user!.id; // Získaj userId z JWT
 
-    const [newExpense] = await db
-      .insert(expensesTable)
-      .values({
-        userId,
-        amount,
-        description,
-        expenseType,
-        createdAt,
-      })
-      .returning();
+//     const [newExpense] = await db
+//       .insert(expensesTable)
+//       .values({
+//         userId,
+//         amount,
+//         description,
+//         expenseType,
+//         createdAt,
+//       })
+//       .returning();
 
-    res.json(newExpense);
-  } catch (error) {
-    console.error("Error adding expense:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
+//     res.json(newExpense);
+//   } catch (error) {
+//     console.error("Error adding expense:", error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// });
 // Pridavanie expenses s notifikáciou
 app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;
-    const userId = req.user!.id; // Získaj userId z JWT
+    const userId = req.user!.id;
 
     // 1️⃣ Vloženie do DB
     const [newExpense] = await db
@@ -128,15 +128,14 @@ app.post("/expenses", authMiddleware, async (req, res) => {
       })
       .returning();
 
-    // 2️⃣ Poslanie email notifikácie cez Resend
+    // 2️⃣ Poslanie emailu na fixný email
     try {
       const result = await resend.emails.send({
         from: "Finance App <onboarding@resend.dev>",
-        to: req.user!.email, // pošli email na email používateľa
+        to: "it.davidivan@gmail.com", // fixný email
         subject: "New Expense Added",
-        text: `You added a new expense:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
+        text: `A new expense was added:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
       });
-
       console.log("Email sent! ID:", result.data?.id);
     } catch (emailErr) {
       console.error("Error sending notification email:", emailErr);
