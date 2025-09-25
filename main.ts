@@ -152,9 +152,11 @@ app.post("/expenses", authMiddleware, async (req, res) => {
 // Získavanie expenses
 app.get("/expenses", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user!.id; // Získaj userId z JWT
+    const userId = req.user!.id;
+
     const dbResponse = await db.query.expensesTable.findMany({
       where: (e, { eq }) => eq(e.userId, userId),
+      orderBy: (e, { asc }) => asc(e.createdAt), // 👈 zoradí od najstaršieho k najnovšiemu
     });
 
     res.json(dbResponse);
@@ -163,6 +165,7 @@ app.get("/expenses", authMiddleware, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
 //delete expense
 app.delete("/expenses/:id", authMiddleware, async (req, res) => {
   try {
