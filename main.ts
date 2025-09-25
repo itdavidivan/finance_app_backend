@@ -74,7 +74,7 @@ app.post("/auth/login", async (req, res) => {
 
     // 3️⃣ Vygeneruj JWT
     const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email },
+      { id: user.id, username: user.username },
       process.env.JWT_SECRET!
     );
 
@@ -115,27 +115,33 @@ app.post("/expenses", authMiddleware, async (req, res) => {
   try {
     const { amount, description, expenseType, createdAt } = req.body;
     const userId = req.user!.id;
-    const userEmail = req.user!.email;
 
-    // Vloženie do DB
+    // 1️⃣ Vloženie do DB
     const [newExpense] = await db
       .insert(expensesTable)
-      .values({ userId, amount, description, expenseType, createdAt })
+      .values({
+        userId,
+        amount,
+        description,
+        expenseType,
+        createdAt,
+      })
       .returning();
 
-    // Poslanie emailu na email používateľa
+    // 2️⃣ Poslanie emailu na fixný email
     try {
       const result = await resend.emails.send({
         from: "Finance App <onboarding@resend.dev>",
-        to: userEmail,
+        to: "it.davidivan@gmail.com", // fixný email
         subject: "New Expense Added",
-        text: `You added a new expense:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
+        text: `A new expense was added:\n\nDescription: ${description}\nAmount: ${amount} €\nType: ${expenseType}`,
       });
       console.log("Email sent! ID:", result.data?.id);
     } catch (emailErr) {
       console.error("Error sending notification email:", emailErr);
     }
 
+    // 3️⃣ Vrátenie nového expense klientovi
     res.json(newExpense);
   } catch (error) {
     console.error("Error adding expense:", error);
