@@ -6,7 +6,6 @@ import {
   uuid,
   timestamp,
   pgEnum,
-  numeric,
 } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
@@ -29,7 +28,7 @@ export const expenseTypeEnum = pgEnum("expense_type", ["car", "meal", "house"]);
 export const expensesTable = pgTable("expenses", {
   id: uuid("id").defaultRandom(),
   userId: uuid("user_id").notNull(),
-  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  amount: integer("amount").notNull(),
   description: text("description").notNull(),
   expenseType: expenseTypeEnum("expense_type").default("meal"),
   createdAt: timestamp("created_at").defaultNow(),
