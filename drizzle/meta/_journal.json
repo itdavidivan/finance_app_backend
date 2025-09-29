@@ -15,6 +15,13 @@
       "when": 1758288132008,
       "tag": "0001_rare_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759181192060,
+      "tag": "0002_abnormal_unus",
+      "breakpoints": true
     }
   ]
 }

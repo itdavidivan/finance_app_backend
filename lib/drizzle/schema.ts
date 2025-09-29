@@ -16,7 +16,12 @@ export const usersTable = pgTable("users", {
   email: varchar("email").notNull().unique(),
 });
 
-export const expenseTypeEnum = pgEnum("expense_type", ["car", "meal", "house"]);
+export const expenseTypeEnum = pgEnum("expense_type", [
+  "car",
+  "meal",
+  "house",
+  "other",
+]);
 
 // export const expensesTable = pgTable("expenses", {
 //   id: uuid("id").defaultRandom(),
