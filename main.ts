@@ -190,6 +190,29 @@ app.delete("/expenses/:id", authMiddleware, async (req, res) => {
   }
 });
 
+//edit expense
+app.put("/expenses/:id", authMiddleware, async (req, res) => {
+  try {
+    const expenseId = req.params.id;
+    if (!expenseId) {
+      return res.status(400).send("Expense ID is required");
+    }
+    const userId = req.user!.id;
+    const { amount, description, expenseType } = req.body;
+    const [updatedExpense] = await db
+      .update(expensesTable)
+      .set({ amount, description, expenseType })
+      .where(
+        and(eq(expensesTable.id, expenseId), eq(expensesTable.userId, userId))
+      )
+      .returning();
+    res.json(updatedExpense);
+  } catch (error) {
+    console.error("Error updating expense:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 const PORT = process.env.PORT || 8080; // fallback 8080 len lokálne
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
