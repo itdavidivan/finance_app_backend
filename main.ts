@@ -15,7 +15,13 @@ dotenv.config();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://mojevydavky.netlify.app", // frontend adresa
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 
 // 🌍 Hello route
