@@ -15,6 +15,24 @@ dotenv.config();
 const resend = new Resend(process.env.RESEND_API_KEY);
 const db = drizzle(process.env.DATABASE_URL!, { schema });
 const app = express();
+// 🟢 Keepalive token z env
+const KEEPALIVE_TOKEN = process.env.KEEPALIVE_TOKEN;
+
+// Middleware na overenie tokenu
+function requireKeepaliveToken(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  // Header Authorization: Bearer TOKEN
+  const authHeader = req.get("authorization");
+  if (authHeader && authHeader.split(" ")[1] === KEEPALIVE_TOKEN) return next();
+
+  // Fallback: query param
+  if (req.query.token === KEEPALIVE_TOKEN) return next();
+
+  return res.status(401).json({ ok: false, message: "Unauthorized" });
+}
 app.use(cors());
 app.use(express.json());
 
@@ -22,7 +40,21 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
-
+// 🟢 Keepalive endpoint pre UptimeRobot
+app.get("/internal/keepalive", requireKeepaliveToken, async (req, res) => {
+  try {
+    // ľahký reálny request do DB, aby sa server neuspával
+    await db.query.usersTable.findFirst();
+    res.json({
+      ok: true,
+      message: "pong",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Keepalive error:", err);
+    res.status(500).json({ ok: false, message: "keepalive failed" });
+  }
+});
 // 📝 Register
 app.post("/auth/register", async (req, res) => {
   try {
